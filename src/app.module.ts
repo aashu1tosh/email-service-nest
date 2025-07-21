@@ -1,10 +1,16 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { APP_GUARD } from '@nestjs/core';
+import { IpWhitelistGuard } from './common/guard/ip-whitelist.guard';
+import { PingController } from './modules/ping/ping.controller';
 
 @Module({
   imports: [],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [PingController],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: IpWhitelistGuard,
+    }
+  ],
 })
-export class AppModule {}
+export class AppModule { }
