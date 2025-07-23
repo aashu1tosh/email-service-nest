@@ -15,8 +15,8 @@ export async function appConfig() {
     app.connectMicroservice<MicroserviceOptions>({
         transport: Transport.RMQ,
         options: {
-            urls: [configService.get<string>('RABBITMQ_URL') || 'amqp://localhost:5672'],
-            queue: configService.get<string>('RABBITMQ_QUEUE') || 'default_queue',
+            urls: [configService.get<string>('RABBITMQ_URL')!],
+            queue: configService.get<string>('RABBITMQ_QUEUE'),
             queueOptions: {
                 durable: true,
             },
