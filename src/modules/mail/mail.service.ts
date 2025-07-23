@@ -1,66 +1,38 @@
-
-import { MailerService } from '@nestjs-modules/mailer';
-import { Inject, Injectable, Logger as NestLogger } from '@nestjs/common';
-import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
-
-interface ForgotPasswordData {
-    email: string;
-    resetToken: string;
-    userName?: string;
-    resetUrl?: string;
-}
+import { Injectable } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { MessageLog } from './entity/message-log.entity';
 
 @Injectable()
 export class MailService {
     constructor(
-        private readonly mailerService: MailerService,
-        @Inject(WINSTON_MODULE_NEST_PROVIDER) private readonly logger: NestLogger,
+        @InjectRepository(MessageLog)
+        private readonly messageLogRepo: Repository<MessageLog>,
+        // Injected RabbitMQ publisher
+        private readonly client: ClientProxy
     ) { }
 
-    async sendEmail(
-        to: string,
-        subject: string,
-        template: string,
-        context: Record<string, any>,
-    ): Promise<void> {
+    async publishForgotPasswordEmail(data: any) {
+        const log = this.messageLogRepo.create({
+            queue: 'forgot-password.queue',
+            payload: data,
+            status: 'PENDING',
+        });
+
+        await this.messageLogRepo.save(log);
+
         try {
-            this.logger.log(`Attempting to send email to ${to} with template ${template}`);
-            await this.mailerService.sendMail({
-                to: to,
-                subject: subject,
-                template: template,
-                context: context,
-            });
-            this.logger.log(`Email sent successfully to ${to} with template ${template}`);
-        } catch (error) {
-            this.logger.error(`Failed to send email to ${to}. Error: ${error.message}`, error.stack);
+            await this.client.emit('forgot-password.queue', data).toPromise();
+
+            log.status = 'SUCCESS';
+        } catch (err) {
+            log.status = 'FAILED';
+            log.error = err?.message || 'Unknown error';
         }
-    }
 
-    async sendForgotPasswordEmail(data: ForgotPasswordData): Promise<void> {
-        try {
-            this.logger.log(`Processing forgot password email for: ${data.email}`);
+        await this.messageLogRepo.save(log);
 
-            const context = {
-                userName: data.userName || 'User',
-                resetToken: data.resetToken,
-                resetUrl: data.resetUrl || `${process.env.FRONTEND_URL}/reset-password?token=${data.resetToken}`,
-                // Add any other context variables your template needs
-            };
-
-            await this.sendEmail(
-                data.email,
-                'Password Reset Request',
-                'forgot-password', // Template name
-                context
-            );
-
-            this.logger.log(`Forgot password email sent successfully to: ${data.email}`);
-        } catch (error) {
-            this.logger.error(`Failed to send forgot password email to ${data.email}. Error: ${error.message}`, error.stack);
-            throw error; // Re-throw to handle in consumer if needed
-        }
+        return log;
     }
 }
-
-
