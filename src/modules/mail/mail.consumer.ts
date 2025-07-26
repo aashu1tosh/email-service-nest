@@ -1,10 +1,10 @@
-import { Controller, Logger } from '@nestjs/common';
+import { Controller, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Ctx, MessagePattern, Payload, RmqContext } from '@nestjs/microservices';
+import { EventPattern, Payload } from '@nestjs/microservices';
 import { MailService } from './mail.service';
 
 @Controller()
-export class MailConsumer {
+export class MailConsumer implements OnModuleInit {
     private readonly logger = new Logger(MailConsumer.name);
 
     constructor(
@@ -12,24 +12,19 @@ export class MailConsumer {
         private readonly configService: ConfigService
     ) { }
 
-    // Use the routing key as the pattern
-    @MessagePattern('forgot-password.queue')
-    async handleMessage(@Payload() data: any, @Ctx() context: RmqContext) {
-        console.log("🚀 ~ MailConsumer ~ handleMessage ~ context:", context)
-        console.log("🚀 ~ MailConsumer ~ handleMessage ~ data:", data)
-        const channel = context.getChannelRef();
-        const originalMsg = context.getMessage();
+    onModuleInit() {
+        this.logger.log('MailConsumer initialized and ready to receive messages');
+    }
 
+    @EventPattern('forgot-password')
+    async handleAllMessages(@Payload() data: { to: string; resetToken: string }) {
+        console.log('🎯 Received message:', data);
+        this.logger.log('Processing message from queue');
 
-        try {
-            this.logger.log(`Received message: ${JSON.stringify(data)}`);
-
-            await this.mailService.publishForgotPasswordEmail(data);
-            channel.ack(originalMsg);
-            this.logger.log('Message processed successfully');
-        } catch (error) {
-            this.logger.error(`Error processing message: ${error.message}`);
-            channel.nack(originalMsg, false, false);
+        if (data && data.to && data.resetToken) {
+            // await this.processForgotPassword(data);
+        } else {
+            this.logger.warn('Received message with unknown format:', data);
         }
     }
 }

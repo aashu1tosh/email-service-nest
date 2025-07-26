@@ -1,4 +1,3 @@
-// Update your appConfig to use raw queue consumption
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
@@ -13,7 +12,6 @@ export async function appConfig() {
 
     const configService = app.get(ConfigService);
 
-    // Configure for direct queue consumption
     app.connectMicroservice<MicroserviceOptions>({
         transport: Transport.RMQ,
         options: {
@@ -22,15 +20,40 @@ export async function appConfig() {
             queueOptions: {
                 durable: true,
             },
-            // Important: This tells NestJS to consume raw messages
             noAck: false,
-            // Disable pattern-based routing
             serializer: {
-                serialize: (value: any) => value,
+                serialize: (value: any) => {
+                    // If sending, keep as-is or add pattern if needed
+                    return value;
+                },
             },
             deserializer: {
                 deserialize: (value: any, options?: any) => {
-                    return JSON.parse(value.toString());
+                    console.log("🚀 Raw message received:", value);
+
+                    // If value is already structured with pattern, return as-is
+                    if (value && typeof value === 'object' && value.pattern) {
+                        console.log("✅ Message already has pattern:", value.pattern);
+                        return value;
+                    }
+
+                    // If it's raw data, auto-wrap it with a pattern
+                    if (value && typeof value === 'object' && value.to && value.resetToken) {
+                        const wrappedMessage = {
+                            pattern: 'forgot-password', // Auto-assign pattern
+                            data: value
+                        };
+                        console.log("🔄 Auto-wrapped raw message with pattern:", wrappedMessage);
+                        return wrappedMessage;
+                    }
+
+                    // For other raw messages, assign a generic pattern
+                    const genericWrapped = {
+                        pattern: 'unknown-message',
+                        data: value
+                    };
+                    console.log("⚠️ Wrapped unknown message:", genericWrapped);
+                    return genericWrapped;
                 },
             },
         },
