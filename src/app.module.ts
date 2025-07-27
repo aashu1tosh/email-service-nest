@@ -3,7 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { IpWhitelistGuard } from './common/guard/ip-whitelist.guard';
 import { envValidation } from './config/env.validation';
-import { MailModule } from './modules/mail/mail.module';
+import { ForgotPasswordModule } from './modules/forgot-password/forgot-password.module';
 import { PingController } from './modules/ping/ping.controller';
 
 @Module({
@@ -12,7 +12,7 @@ import { PingController } from './modules/ping/ping.controller';
       isGlobal: true,
       validationSchema: envValidation
     }),
-    MailModule
+    ForgotPasswordModule
   ],
   controllers: [PingController],
   providers: [
