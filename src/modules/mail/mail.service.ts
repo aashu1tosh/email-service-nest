@@ -25,8 +25,6 @@ export class MailService {
                 pass: this.configService.get<string>('SMTP_PASSWORD'),
             },
         });
-
-        console.log('MailService initialized with transporter:', this.transporter);
     }
 
     async sendMail(data: ISendMailOptions): Promise<void> {

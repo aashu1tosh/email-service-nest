@@ -27,4 +27,17 @@ export class ForgotPasswordService {
             html: html,
         });
     }
+
+    // async sendWebhook(data: any) {
+    //     console.log("🚀 ~ ForgotPasswordService ~ sendWebhook ~ data:", data);
+
+    //     try {
+    //         const webhookUrl = 'https://your-webhook-target.com/api/reset-password';
+    //         const response = await axios.post(webhookUrl, data);
+
+    //         console.log('Webhook sent successfully:', response.status);
+    //     } catch (error) {
+    //         console.error('Error sending webhook:', error.message);
+    //     }
+    // }
 }
