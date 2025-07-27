@@ -8,7 +8,8 @@ export class ForgotPasswordService {
     ) { }
 
     async publishForgotPasswordEmail(data: any) {
-        const { email, token } = data;
+        console.log("🚀 ~ ForgotPasswordService ~ publishForgotPasswordEmail ~ data:", data)
+        const { to, token } = data;
 
         // Construct the email content
         const subject = 'Password Reset Request';
@@ -17,7 +18,7 @@ export class ForgotPasswordService {
 
         // Send the email using MailService
         await this.mailService.sendMail({
-            to: email,
+            to,
             subject: subject,
             html: html,
         });

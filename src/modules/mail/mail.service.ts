@@ -22,9 +22,11 @@ export class MailService {
             secure: false, // true for 465, false for other ports
             auth: {
                 user: this.configService.get<string>('SMTP_USER'),
-                pass: this.configService.get<string>('SMTP_PASS'),
+                pass: this.configService.get<string>('SMTP_PASSWORD'),
             },
         });
+
+        console.log('MailService initialized with transporter:', this.transporter);
     }
 
     async sendMail(data: ISendMailOptions): Promise<void> {
