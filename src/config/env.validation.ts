@@ -15,4 +15,7 @@ export const envValidation = Joi.object({
     SMTP_USER: Joi.string().required(),
     SMTP_PASSWORD: Joi.string().required(),
     DEFAULT_EMAIL_FROM: Joi.string().required(),
+
+    FRONTEND_URL: Joi.string().uri().required(),
+    RESTORE_PASSWORD_PATH: Joi.string().required(),
 });

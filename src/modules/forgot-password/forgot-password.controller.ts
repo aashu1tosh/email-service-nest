@@ -1,10 +1,11 @@
 import { MESSAGE_PATTERNS } from "@/constant/queue.constant";
-import { Controller } from "@nestjs/common";
+import { Controller, Logger } from "@nestjs/common";
 import { Ctx, EventPattern, Payload, RmqContext } from "@nestjs/microservices";
 import { ForgotPasswordService } from "./forgot-password.service";
 
 @Controller()
 export class ForgotPasswordController {
+    private readonly logger = new Logger(ForgotPasswordController.name);
 
     constructor(private readonly forgotPasswordService: ForgotPasswordService) { }
 
@@ -15,12 +16,12 @@ export class ForgotPasswordController {
 
         try {
             await this.forgotPasswordService.publishForgotPasswordEmail(data);
-            // ✅ Acknowledge the message after success
+            this.logger.log(`✅ Email sent successfully for: ${data.to}`);
             channel.ack(originalMsg);
         } catch (err) {
-            console.error('❌ Error handling forgot password:', err);
-            // ❌ NACK the message if something fails
+            this.logger.error(`❌ Error while handling forgot password for: ${data.to}`, err?.stack);
             channel.nack(originalMsg, false, false); // requeue = false
         }
     }
+
 }
