@@ -1,1 +1,6 @@
-export const QUEUE_NAME = process.env.RABBITMQ_QUEUE || 'forgot-password.queue';
+export const MESSAGE_PATTERNS = {
+    FORGOT_PASSWORD: 'forgot-password',
+    EMAIL_VERIFICATION: 'email-verification',
+    WELCOME_EMAIL: 'welcome-email',
+    NEWSLETTER: 'newsletter'
+} as const;
